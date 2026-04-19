@@ -15,5 +15,9 @@ class LTX2FastConfig(LTX2Config):
     pipeline_version: ClassVar[str] = "0.1.0"
     estimated_vram_gb: ClassVar[float | None] = 45.0
 
+    # Landscape defaults (parent defaults are portrait 384x320)
+    height: int = 384
+    width: int = 512
+
     # Disable FFN chunking by default (not needed with 96GB)
     ffn_chunk_size: int | None = None

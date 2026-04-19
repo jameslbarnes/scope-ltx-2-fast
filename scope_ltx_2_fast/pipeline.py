@@ -10,7 +10,6 @@ eliminated entirely.
 
 import logging
 
-import numpy as np
 import torch
 
 from scope_ltx_2.pipeline import LTX2Pipeline
@@ -61,49 +60,9 @@ class LTX2FastPipeline(LTX2Pipeline):
         if hasattr(self, "_text_projection") and self._text_projection is not None:
             self._text_projection.to(self.device)
 
-        # Crossfade state
-        self._prev_tail_frames = None  # Last N frames from previous chunk
-        self._crossfade_frames = 12  # ~0.5s at 24fps
-
         logger.info(
             f"All models GPU-resident: {torch.cuda.memory_allocated() / 1e9:.1f}GB allocated"
         )
-
-    # ── Crossfade between chunks ──────────────────────────────────────────────
-
-    def __call__(self, **kwargs) -> dict:
-        result = super().__call__(**kwargs)
-
-        if "video" in result and result["video"] is not None:
-            video = result["video"]  # (N, H, W, 3)
-            n = self._crossfade_frames
-
-            is_tensor = isinstance(video, torch.Tensor)
-            if is_tensor:
-                frames = video.float()
-            else:
-                frames = torch.from_numpy(np.asarray(video)).float()
-
-            # Blend start of this chunk with tail of previous chunk
-            if self._prev_tail_frames is not None and frames.shape[0] > n:
-                prev = self._prev_tail_frames.to(frames.device)
-                # Match spatial dimensions (in case resolution changed)
-                if prev.shape[1:] == frames.shape[1:]:
-                    for i in range(n):
-                        alpha = i / n  # 0 → 1 over crossfade region
-                        frames[i] = prev[i] * (1 - alpha) + frames[i] * alpha
-                    logger.info(f"Applied {n}-frame crossfade")
-
-            # Save tail frames for next chunk
-            if frames.shape[0] > n:
-                self._prev_tail_frames = frames[-n:].clone().cpu()
-
-            if is_tensor:
-                result["video"] = frames.to(video.dtype)
-            else:
-                result["video"] = frames.numpy().astype(video.dtype)
-
-        return result
 
     # ── No-op all offloading methods ─────────────────────────────────────────
 
