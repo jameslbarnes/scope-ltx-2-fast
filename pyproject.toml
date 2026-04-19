@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "scope-ltx-2-fast"
+version = "0.1.0"
+description = "LTX 2.3 high-VRAM pipeline — all models GPU-resident, no offloading"
+requires-python = ">=3.12"
+dependencies = [
+    "scope-ltx-2 @ git+https://github.com/daydreamlive/scope-ltx-2.git",
+]
+
+[project.entry-points.scope]
+scope-ltx-2-fast = "scope_ltx_2_fast"
