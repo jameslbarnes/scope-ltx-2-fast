@@ -124,7 +124,9 @@ class LTX2FastPipeline(LTX2Pipeline):
         pass  # Stay on GPU
 
     def _ensure_denoising_ready(self, total_tokens=0):
-        pass  # Everything already on GPU, no streaming setup needed
+        # Call parent's implementation which moves all blocks to GPU when they fit
+        # (on 275GB B300, all 48 blocks always fit)
+        LTX2Pipeline._ensure_denoising_ready(self, total_tokens)
 
     def unload(self):
         """Clean up all GPU memory."""
