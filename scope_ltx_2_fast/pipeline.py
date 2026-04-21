@@ -29,7 +29,9 @@ class LTX2FastPipeline(LTX2Pipeline):
     def __init__(self, **kwargs):
         # Disable FFN chunking (not needed with ample VRAM)
         kwargs.setdefault("ffn_chunk_size", None)
+        logger.info("[LTX2Fast] __init__ starting, calling super()...")
         super().__init__(**kwargs)
+        logger.info(f"[LTX2Fast] super().__init__ done. _transformer exists: {hasattr(self, '_transformer')}, is None: {getattr(self, '_transformer', 'MISSING') is None}")
 
         # Move transformer from CPU → GPU permanently (parent loads to CPU)
         if hasattr(self, '_transformer') and self._transformer is not None:
