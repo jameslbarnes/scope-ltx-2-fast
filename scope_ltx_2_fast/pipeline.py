@@ -32,12 +32,25 @@ class LTX2FastPipeline(LTX2Pipeline):
         super().__init__(**kwargs)
 
         # Move transformer from CPU → GPU permanently (parent loads to CPU)
-        if self._transformer is not None:
-            logger.info("Moving transformer to GPU (permanent)...")
-            self._transformer.to(self.device)
-            logger.info(
-                f"Transformer on GPU: {torch.cuda.memory_allocated() / 1e9:.1f}GB allocated"
-            )
+        if hasattr(self, '_transformer') and self._transformer is not None:
+            logger.info(f"Moving transformer to GPU (type={type(self._transformer).__name__})...")
+            try:
+                self._transformer = self._transformer.to(self.device)
+                logger.info(
+                    f"Transformer on GPU: {torch.cuda.memory_allocated() / 1e9:.1f}GB allocated"
+                )
+            except Exception as e:
+                logger.error(f"Failed to move transformer to GPU: {e}")
+                # Try moving individual blocks
+                try:
+                    if hasattr(self._transformer, 'transformer_blocks'):
+                        for i, block in enumerate(self._transformer.transformer_blocks):
+                            block.to(self.device)
+                        logger.info(f"Moved {len(self._transformer.transformer_blocks)} blocks to GPU: {torch.cuda.memory_allocated() / 1e9:.1f}GB")
+                except Exception as e2:
+                    logger.error(f"Block-level move also failed: {e2}")
+        else:
+            logger.warning(f"No _transformer attribute found! attrs={[a for a in dir(self) if 'trans' in a.lower()]}")
 
         # Ensure VAEs are on GPU
         if not self._vaes_on_gpu:
