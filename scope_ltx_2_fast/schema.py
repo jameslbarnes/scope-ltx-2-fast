@@ -19,9 +19,5 @@ class LTX2FastConfig(LTX2Config):
     height: int = 384
     width: int = 512
 
-    # Optimized defaults for RTX 6000 Pro ambient mode
-    num_frames: int = 49      # ~2s clips — fast cuts, responsive to prompt changes
-    num_steps: int = 6        # Sweet spot between quality and realtime at 512x384
-
     # Disable FFN chunking by default (not needed with 96GB)
     ffn_chunk_size: int | None = None
